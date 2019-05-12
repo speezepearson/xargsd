@@ -1,0 +1,20 @@
+{
+    "triggers": [
+        {
+            "name": "pytest",
+            "expression": [
+                "allof",
+                ["pcre", ".*\\.py$", "wholename"],
+                ["not", ["pcre", "(^|.*/)\\..*", "wholename"]],
+                ["not", ["pcre", "(^|.*/)__pycache__/.*", "wholename"]]
+            ],
+            "stdin": ["name", "mode"],
+            "append_files": false,
+            "command": [
+                "bash",
+                "-c",
+                "python -m xargsd.client --socket-file .xargsd-pytest.sock -- ."
+            ]
+        }
+    ]
+}
