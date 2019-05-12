@@ -8,7 +8,6 @@
                 ["not", ["pcre", "(^|.*/)\\..*", "wholename"]],
                 ["not", ["pcre", "(^|.*/)__pycache__/.*", "wholename"]]
             ],
-            "stdin": ["name", "mode"],
             "append_files": false,
             "command": [
                 "bash",
