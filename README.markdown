@@ -41,11 +41,9 @@ That is to say, `xargsd [...] -- foobar`, when it receives arguments `a` and `b`
 * A completely serious example, using `watchman` to run `xargsd.client` whenever a file (whose name matches some pattern) changes:
 
     ```bash
-    $ nohup python -m xargsd --unique --socket-file .xargsd-pytest.sock -vvv -- pytest --color=yes >.xargsd-pytest.log 2>&1 &
-    [1] 18242
     $ watchman watch .
-    $ watchman -- trigger . pytest -p '.*\.py' -X -p '(^|.*/)\.' -- bash -c 'python -m xargsd.client --socket-file .xargsd-pytest.sock -- .'
-    $ tail -f .xargsd-pytest.log
+    $ watchman -- trigger . pytest -p '.*\.py$' -X -p '(^|.*/)\.' -- bash -c 'python -m xargsd.client --socket-file .xargsd-pytest.sock -- .'
+    $ python -m xargsd --unique --socket-file .xargsd-pytest.sock -vvv -- pytest --color=yes
     ```
 
     Then save a `.py` file and watch the daemon execute `pytest .`

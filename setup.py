@@ -3,12 +3,12 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
+from pathlib import Path
 
-here = path.abspath(path.dirname(__file__))
+here = Path(__file__).absolute().parent
 
 # Get the long description from the relevant file
-with open(path.join(here, 'README.markdown'), encoding='utf-8') as f:
-    long_description = f.read()
+long_description = (here/'README.markdown').read_text()
 
 setup(
     name='xargsd',
@@ -16,10 +16,11 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1',
+    version='0.1.2',
 
     description='xargs-like daemon accepting input from arbitrary processes',
     long_description=long_description,
+    long_description_content_type='text/markdown',
 
     # The project's main homepage.
     url='https://github.com/speezepearson/xargsd',
@@ -48,8 +49,6 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
 
