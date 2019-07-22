@@ -38,6 +38,7 @@ async def async_main(args):
     server = await asyncio.get_event_loop().create_unix_server(
         (lambda: EnqueueingProtocol(queue)),
         args.socket_file)
+    logging.info('xargsd is listening on %s ...', args.socket_file)
     await asyncio.gather(
         server.serve_forever(),
         execute_command_on_targets(args.command, queue))
