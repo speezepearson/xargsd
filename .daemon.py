@@ -1,0 +1,42 @@
+import json
+import shlex
+import subprocess
+from pathlib import Path
+
+LOGFILE = Path('.log')
+
+TRIGGERS = [
+    {
+        "name": "pytest",
+        "expression": [
+            "anyof",
+            ["pcre", "xargsd/.*\\.py$", "wholename"],
+            ["pcre", "test/.*\\.py$", "wholename"]
+        ],
+        "append_files": False,
+        "command": [
+            "bash",
+            "-c",
+            "python -m xargsd.client --socket-file .xargsd-pytest.sock -- ."
+        ]
+    }
+]
+
+subprocess.run(['watchman', 'watch', '.'])
+for trigger in TRIGGERS:
+    subprocess.run(['watchman', '-j',], input=json.dumps(['trigger', '.', trigger]).encode('utf8'))
+
+LOGFILE.open('a').close()
+try:
+    subprocess.run([
+        'python', '-m', 'xargsd',
+        '--unique',
+        '--socket-file', '.xargsd-pytest.sock',
+        '-vvv',
+        '--',
+        'pytest', '--color=yes'
+    ])
+except KeyboardInterrupt:
+    print('Keyboard interrupt received. Deactivating watchman triggers...')
+    for trigger in TRIGGERS:
+        subprocess.run(['watchman', 'trigger-del', '.', trigger['name']])
