@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import functools
 import logging
 import socket
 from pathlib import Path
@@ -32,16 +33,31 @@ async def execute_command_on_targets(command: Sequence[str],
         await proc.communicate()
         logging.debug(f'finished executing {full_command}: status {proc.returncode}')
 
-async def async_main(args):
-    logging.basicConfig(level=logging.WARNING if args.verbose==0 else logging.INFO if args.verbose==1 else logging.DEBUG)
+async def run_server(
+    command: Sequence[str],
+    socket_file: Path,
+    unique: bool = False,
+):
     queue: 'asyncio.Queue[str]' = asyncio.Queue()
     server = await asyncio.get_event_loop().create_unix_server(
         (lambda: EnqueueingProtocol(queue)),
-        args.socket_file)
-    logging.info('xargsd is listening on %s ...', args.socket_file)
+        socket_file)
+    logging.info('xargsd is listening on %s ...', socket_file)
     await asyncio.gather(
         server.serve_forever(),
-        execute_command_on_targets(args.command, queue))
+        execute_command_on_targets(command, queue))
+
+@functools.wraps(run_server, assigned=['__annotations__'])
+def run_server_sync(*args, **kwargs):
+    '''Wrapper around `run_server` to run the coroutine synchronously.'''
+    asyncio.get_event_loop().run_until_complete(run_server(*args, **kwargs))
+
 
 def main():
-    asyncio.get_event_loop().run_until_complete(async_main(parser.parse_args()))
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.WARNING if args.verbose==0 else logging.INFO if args.verbose==1 else logging.DEBUG)
+    run_server_sync(
+        command=args.command,
+        socket_file=args.socket_file,
+        unique=args.unique,
+    )
