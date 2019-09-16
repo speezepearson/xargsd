@@ -51,7 +51,12 @@ async def run_server(
     logger.info('xargsd is listening on %s ...', socket_file)
     await asyncio.gather(
         server.serve_forever(),
-        execute_command_on_targets(command, queue))
+        execute_command_on_targets(
+            command,
+            queue,
+            unique=unique,
+        )
+    )
 
 @functools.wraps(run_server, assigned=['__annotations__'])
 def run_server_sync(*args, **kwargs):
