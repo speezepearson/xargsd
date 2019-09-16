@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import asyncio
 import functools
@@ -22,7 +24,7 @@ class EnqueueingProtocol(asyncio.protocols.Protocol):
             self.queue.put_nowait(line)
 
 async def execute_command_on_targets(command: Sequence[str],
-                                     queue: 'asyncio.Queue[str]',
+                                     queue: asyncio.Queue[str],
                                      unique: bool = False,
                                      logger: logging.Logger = LOGGER,
                                      ) -> None:
