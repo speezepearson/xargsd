@@ -3,14 +3,16 @@ import socket
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--socket-file', type=Path, required=True)
-parser.add_argument('targets', nargs='*')
+parser.add_argument("-s", "--socket-file", type=Path, required=True)
+parser.add_argument("targets", nargs="*")
+
 
 def main():
     args = parser.parse_args()
     conn = socket.socket(socket.AF_UNIX)
     conn.connect(str(args.socket_file))
-    conn.send('\x00'.join(args.targets).encode('utf8'))
+    conn.send("\x00".join(args.targets).encode("utf8"))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
