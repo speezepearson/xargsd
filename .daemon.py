@@ -3,7 +3,7 @@ import shlex
 import subprocess
 from pathlib import Path
 
-LOGFILE = Path('.log')
+LOGFILE = Path(".log")
 
 TRIGGERS = [
     {
