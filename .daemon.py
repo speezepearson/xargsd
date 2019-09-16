@@ -19,7 +19,7 @@ TRIGGERS = [
             "-c",
             "black .; python -m xargsd.client --socket-file .xargsd-pytest.sock -- .",
         ],
-    }
+    },
 ]
 
 subprocess.run(["watchman", "watch", "."])
