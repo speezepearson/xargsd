@@ -20,7 +20,7 @@ parser.add_argument("command", nargs="+")
 
 
 class EnqueueingProtocol(asyncio.protocols.Protocol):
-    def __init__(self, queue: "asyncio.Queue[str]") -> None:
+    def __init__(self, queue: asyncio.Queue[str]) -> None:
         self.queue = queue
 
     def data_received(self, data) -> None:
@@ -53,7 +53,7 @@ async def run_server(
     unique: bool = False,
     logger: logging.Logger = LOGGER,
 ):
-    queue: "asyncio.Queue[str]" = asyncio.Queue()
+    queue: asyncio.Queue[str] = asyncio.Queue()
     server = await asyncio.get_event_loop().create_unix_server(
         (lambda: EnqueueingProtocol(queue)), str(socket_file)
     )
