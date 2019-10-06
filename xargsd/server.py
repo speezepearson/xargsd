@@ -72,6 +72,7 @@ def run_server_sync(*args, **kwargs):
 
 def main():
     args = parser.parse_args()
+    logging.basicConfig(level=logging.DEBUG)
     LOGGER.setLevel(
         logging.WARNING
         if args.verbose == 0
