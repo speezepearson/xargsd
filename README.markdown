@@ -3,6 +3,9 @@ Like `xargs`, but accepts arguments from arbitrary processes, and executes eager
 That is to say, `xargsd [...] -- foobar`, when it receives arguments `a` and `b`, will execute `foobar a b`. If arguments `c` through `f` arrive while `foobar a b` is executing, then `foobar c d e f` will get run as soon as the first invocation finishes.
 
 ## Examples
+
+(All these examples could easily be run in your shell, but then they wouldn't be doctest-able. Sorry!)
+
 * A toy example, demonstrating the very basic functionality:
 
     ```python
