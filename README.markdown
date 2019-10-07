@@ -39,14 +39,16 @@ That is to say, `xargsd [...] -- foobar`, when it receives arguments `a` and `b`
 * A completely serious example, using `watchman` to run `xargsd.client` whenever a file (whose name matches some pattern) changes:
 
     ```python
-    >>> import os
-    >>> os.chdir(subprocess.check_output('mktemp --directory', shell=True).decode().strip())
-    >>> sh('watchman watch .')
-    >>> sh(r"watchman -- trigger . pytest -p '.*\.py$' -X -p '(^|.*/)\.' -- bash -c 'python -m xargsd.client --socket-file .xargsd-pytest.sock -- .'")
-    >>> p = pexpect.spawn('python -m xargsd --unique --socket-file .xargsd-pytest.sock -vvv -- pytest --color=yes')
-    >>> _ = p.expect('xargsd is listening')
-    >>> sh("echo 'def test_that_passes(): assert True' > test_temp.py")
-    >>> _ = p.expect('=== 1 passed in .* ===')
+    >>> if subprocess.call('which watchman >/dev/null 2>&1', shell=True) == 0:
+    ...   import os
+    ...   os.chdir(subprocess.check_output('mktemp --directory', shell=True).decode().strip())
+    ...   sh('watchman watch .')
+    ...   sh(r"watchman -- trigger . pytest -p '.*\.py$' -X -p '(^|.*/)\.' -- bash -c 'python -m xargsd.client --socket-file .xargsd-pytest.sock -- .'")
+    ...   p = pexpect.spawn('python -m xargsd --unique --socket-file .xargsd-pytest.sock -vvv -- pytest --color=yes')
+    ...   _ = p.expect('xargsd is listening')
+    ...   sh("echo 'def test_that_passes(): assert True' > test_temp.py")
+    ...   _ = p.expect('=== 1 passed in .* ===')
+    ...
 
     ```
 
