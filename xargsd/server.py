@@ -6,7 +6,7 @@ import functools
 import logging
 import socket
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, TypeVar
 
 LOGGER = logging.getLogger(__name__)
 
@@ -16,21 +16,52 @@ parser = argparse.ArgumentParser(
 parser.add_argument("-s", "--socket-file", type=Path, required=True)
 parser.add_argument("-u", "--unique", action="store_true")
 parser.add_argument("-v", "--verbose", action="count", default=0)
+parser.add_argument("--gui", action="store_true")
 parser.add_argument("command", nargs="+")
 
+import collections
+class Q:
+    def __init__(self):
+        self._queue = collections.deque()
+        self._changed = asyncio.Condition()
+    async def put(self, x):
+        self._queue.append(x)
+        async with self._changed:
+            self._changed.notify_all()
+    async def get(self):
+        async with self._changed:
+            await self._changed.wait_for(lambda: len(self._queue) > 0)
+            return self.get_nowait()
+    async def _notify(self):
+        async with self._changed:
+            self._changed.notify_all()
+    def get_nowait(self):
+        result = self._queue.popleft()
+        asyncio.create_task(self._notify())
+        return result
+    def __iter__(self):
+        return iter(self._queue)
+    def qsize(self):
+        return len(self._queue)
+    async def wait_for_change(self):
+        async with self._changed:
+            await self._changed.wait()
 
 class EnqueueingProtocol(asyncio.protocols.Protocol):
-    def __init__(self, queue: asyncio.Queue[str]) -> None:
+    def __init__(self, loop, queue: Q) -> None:
+        self.loop = loop
         self.queue = queue
 
-    def data_received(self, data) -> None:
+    async def _data_received(self, data):
         for line in data.decode("utf8").split("\x00"):
-            self.queue.put_nowait(line)
+            await self.queue.put(line)
+    def data_received(self, data) -> None:
+        asyncio.create_task(self._data_received(data))
 
 
 async def execute_command_on_targets(
     command: Sequence[str],
-    queue: asyncio.Queue[str],
+    queue: Q,
     unique: bool = False,
     logger: logging.Logger = LOGGER,
 ) -> None:
@@ -46,22 +77,27 @@ async def execute_command_on_targets(
         await proc.communicate()
         logger.debug(f"finished executing {full_command}: status {proc.returncode}")
 
-
 async def run_server(
     command: Sequence[str],
     socket_file: Path,
     unique: bool = False,
     logger: logging.Logger = LOGGER,
+    serve_gui: bool = False,
 ):
-    queue: asyncio.Queue[str] = asyncio.Queue()
-    server = await asyncio.get_event_loop().create_unix_server(
-        (lambda: EnqueueingProtocol(queue)), str(socket_file)
+    loop = asyncio.get_event_loop()
+    queue: Q = Q()
+    server = await loop.create_unix_server(
+        (lambda: EnqueueingProtocol(loop, queue)), str(socket_file)
     )
     logger.info("xargsd is listening on %s ...", socket_file)
-    await asyncio.gather(
+    tasks = [
         server.serve_forever(),
         execute_command_on_targets(command, queue, unique=unique),
-    )
+    ]
+    if serve_gui:
+        from .server_gui import serve_gui
+        tasks.append(serve_gui(command, unique, socket_file, queue))
+    await asyncio.gather(*tasks)
 
 
 @functools.wraps(run_server, assigned=["__annotations__"])
@@ -85,4 +121,5 @@ def main():
         socket_file=args.socket_file,
         unique=args.unique,
         logger=LOGGER,
+        serve_gui=args.gui,
     )
