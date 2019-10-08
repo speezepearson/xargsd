@@ -20,8 +20,6 @@ That is to say, `xargsd [...] -- foobar`, when it receives arguments `a` and `b`
 
     ```
 
-    (Note that the `INFO:` lines and the following ones are printed by `xargsd`, not the client.)
-
 * A slightly-less-toy example, which demonstrates how commands are batched up while a previous command is executing:
 
     ```python
@@ -46,10 +44,9 @@ That is to say, `xargsd [...] -- foobar`, when it receives arguments `a` and `b`
     ...   sh(r"watchman -- trigger . pytest -p '.*\.py$' -X -p '(^|.*/)\.' -- bash -c 'python -m xargsd.client --socket-file .xargsd-pytest.sock -- .'")
     ...   p = pexpect.spawn('python -m xargsd --unique --socket-file .xargsd-pytest.sock -vvv -- pytest --color=yes')
     ...   _ = p.expect('xargsd is listening')
+    ...   # Now change a .py file and confirm that the tests run:
     ...   sh("echo 'def test_that_passes(): assert True' > test_temp.py")
     ...   _ = p.expect('=== 1 passed in .* ===')
     ...
 
     ```
-
-    Then save a `.py` file and watch the daemon execute `pytest .`
